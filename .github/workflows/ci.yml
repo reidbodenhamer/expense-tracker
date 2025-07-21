@@ -29,4 +29,4 @@ jobs:
       run: yarn test --coverage
 
     - name: Build for production
-      run: yarn build --if-present
+      run: yarn build

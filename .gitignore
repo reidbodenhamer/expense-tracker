@@ -377,4 +377,6 @@ $RECYCLE.BIN/
 # and uncomment the following lines
 # .pnp.*
 
+sample-expenses/
+
 # End of https://www.toptal.com/developers/gitignore/api/node,yarn,react,macos,windows,linux,visualstudiocode,intellij

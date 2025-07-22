@@ -1,0 +1,105 @@
+/* Data Table and Results */
+.expense-tracker__results-section {
+  width: 100%;
+  max-width: 800px;
+  margin-top: var(--spacing-2xl);
+}
+
+.expense-tracker__table-container {
+  background-color: var(--surface-container);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-2xl);
+  box-shadow: var(--shadow-1);
+  overflow: hidden;
+}
+
+.expense-tracker__table-container h2 {
+  font-size: var(--text-title-lg);
+  line-height: var(--text-title-lg-height);
+  color: var(--on-surface);
+  margin-bottom: var(--spacing-lg);
+  text-align: center;
+}
+
+.expense-tracker__spending-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: var(--surface-container-high);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  box-shadow: var(--shadow-1);
+}
+
+thead {
+  background-color: var(--surface-container-high);
+}
+
+th {
+  padding: var(--spacing-lg);
+  text-align: right;
+  font-size: var(--text-label-lg);
+  line-height: var(--text-label-lg-height);
+  font-weight: var(--text-label-lg-weight);
+  color: var(--on-surface);
+  border-bottom: 1px solid var(--outline-variant);
+}
+
+th:first-child {
+  text-align: left;
+}
+
+td {
+  padding: var(--spacing-lg);
+  font-size: var(--text-body-lg);
+  line-height: var(--text-body-lg-height);
+  color: var(--on-surface);
+  border-bottom: 1px solid var(--outline-variant);
+  text-align: right;
+}
+
+td:first-child {
+  text-align: left;
+  font-weight: 500;
+}
+
+td:last-child {
+  font-weight: 600;
+  color: var(--primary);
+}
+
+tbody tr:hover {
+  background-color: var(--surface-container-highest);
+  transition: background-color var(--duration-fast) var(--ease-standard);
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.expense-tracker__summary-stats {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-5xl);
+  margin-top: var(--spacing-2xl);
+  padding: var(--spacing-2xl) 0;
+}
+
+.expense-tracker__stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.expense-tracker__stat-label {
+  font-size: var(--text-title-md);
+  font-weight: var(--text-title-md-weight);
+  color: var(--on-surface);
+  margin-bottom: var(--spacing-sm);
+}
+
+.expense-tracker__stat-value {
+  font-size: var(--text-headline-md);
+  font-weight: var(--text-headline-md-weight);
+  color: var(--on-surface-variant);
+}

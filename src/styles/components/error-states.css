@@ -1,0 +1,72 @@
+/* Error and Loading States */
+.expense-tracker__error {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+  background-color: var(--error-container);
+  color: var(--on-error-container);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--error);
+}
+
+.expense-tracker__error svg {
+  color: var(--on-error-container);
+  flex-shrink: 0;
+}
+
+.expense-tracker__error-close {
+  background: none;
+  border: none;
+  color: var(--on-error-container);
+  font-size: var(--spacing-xl);
+  cursor: pointer;
+  padding: 0;
+  margin-left: auto;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.expense-tracker__error-close:hover {
+  opacity: 1;
+}
+
+.expense-tracker__loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-xl);
+  margin-bottom: var(--spacing-lg);
+  background-color: var(--surface-variant);
+  color: var(--on-surface-variant);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--outline-variant);
+}
+
+.expense-tracker__spinner {
+  width: var(--spacing-xl);
+  height: var(--spacing-xl);
+  border: 2px solid var(--outline-variant);
+  border-top: 2px solid var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.expense-tracker__upload-success {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg);
+  margin-top: var(--spacing-2xl);
+  background-color: var(--primary-container);
+  color: var(--on-primary-container);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--on-primary);
+}

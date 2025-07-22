@@ -1,92 +1,54 @@
 import { useState } from 'react'
+import { processCSV, generateMonthlyData, validateCSVFile } from '../utils/csvProcessor'
 import '../ExpenseTracker.css'
 
 function ExpenseTracker() {
   const [expenses, setExpenses] = useState([])
   const [monthlyData, setMonthlyData] = useState([])
   const [dragActive, setDragActive] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState(null)
 
-  const CSV_DELIMITER = ','
-  const CSV_NEWLINE = '\n'
+  // CSV Processing
+  const handleCSVProcessing = (csvText) => {
+    try {
+      setIsLoading(true)
+      setError(null)
 
-  const processCSV = (csvText) => {
-    const HEADER_ROW_INDEX = 0
-    const DATA_START_INDEX = 1
-    const MINIMUM_REQUIRED_COLUMNS = 2 // need 'date' and 'amount' columns, 'description' optional
+      const expenseData = processCSV(csvText)
+      setExpenses(expenseData)
+      setMonthlyData(generateMonthlyData(expenseData))
+    } catch (error) {
+      setError(error.message)
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
-    const lines = csvText.trim().split(CSV_NEWLINE)
-    const columns = lines[HEADER_ROW_INDEX].split(CSV_DELIMITER).map(h => h.trim().toLowerCase())
-
-    const dateIndex = columns.findIndex(columnName => columnName.includes('date'))
-    const amountIndex = columns.findIndex(columnName => 
-      columnName.includes('amount') || columnName.includes('price') || columnName.includes('cost'))
-    const descriptionIndex = columns.findIndex(columnName => 
-      columnName.includes('description') || columnName.includes('item') || columnName.includes('category'))
-
-    if (dateIndex === -1 || amountIndex === -1) {
-      alert('CSV must contain date and amount columns')
+  const processFile = (file) => {
+    clearError()
+    const { isValid, error } = validateCSVFile(file)
+    if (!isValid) {
+      handleFileError(error)
       return
     }
 
-    const expenseData = []
-    for (let i = DATA_START_INDEX; i < lines.length; i++) {
-      const row = lines[i].split(CSV_DELIMITER).map(value => value.trim())
-
-      if (row.length >= MINIMUM_REQUIRED_COLUMNS) {
-        const date = new Date(row[dateIndex])
-        const amount = parseFloat(row[amountIndex].replace(/[$,]/g, '')) // remove '$' and ','
-        const description = descriptionIndex !== -1 ? row[descriptionIndex] : 'No description'
-        
-        if (!isNaN(date.getTime()) && !isNaN(amount)) {
-          expenseData.push({
-            date: date.toISOString().split('T')[0], // 'YYYY-MM-DD' format
-            amount: amount,
-            description: description
-          })
-        }
-      }
+    setIsLoading(true)
+    const reader = new FileReader()
+    reader.onload = (loadEvent) => {
+      handleCSVProcessing(loadEvent.target.result)
     }
-
-    setExpenses(expenseData)
-    generateMonthlyData(expenseData)
+    reader.onerror = () => {
+      handleFileError('Error reading file. Please try again.')
+    }
+    reader.readAsText(file)
   }
 
-  const generateMonthlyData = (expenseData) => {
-    const monthlyTotals = {}
-    
-    expenseData.forEach(expense => {
-      const date = new Date(expense.date)
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}` // 'YYYY-MM' format
-      const monthName = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' }) // 'Month YYYY' format
-      
-      if (!monthlyTotals[monthKey]) {
-        monthlyTotals[monthKey] = {
-          month: monthName,
-          total: 0,
-          count: 0
-        }
-      }
-      
-      monthlyTotals[monthKey].total += expense.amount
-      monthlyTotals[monthKey].count += 1
-    })
-    
-    const sortedMonthly = Object.entries(monthlyTotals) // convert to [key, value] pairs
-      .sort(([monthKeyA], [monthKeyB]) => monthKeyA.localeCompare(monthKeyB))
-      .map(([, monthData]) => monthData) // extract just the month data objects
-    
-    setMonthlyData(sortedMonthly)
-  }
-
+  // Event Handlers
   const handleFileUpload = (fileUploadEvent) => {
     const file = fileUploadEvent.target.files[0]
-
-    if (file && file.type === 'text/csv') {
-      const reader = new FileReader()
-      reader.onload = (loadEvent) => processCSV(loadEvent.target.result)
-      reader.readAsText(file)
-    } else {
-      alert('Please upload a CSV file')
+    if (file) {
+      processFile(file)
     }
   }
 
@@ -95,13 +57,9 @@ function ExpenseTracker() {
     dropEvent.stopPropagation()
     setDragActive(false)
     
-    const file = dropEvent.dataTransfer.files[0]
-    if (file && file.type === 'text/csv') {
-      const reader = new FileReader()
-      reader.onload = (loadEvent) => processCSV(loadEvent.target.result)
-      reader.readAsText(file)
-    } else {
-      alert('Please upload a CSV file')
+    const file = dropEvent.dataTransfer.files?.[0]
+    if (file) {
+      processFile(file)
     }
   }
 
@@ -117,6 +75,16 @@ function ExpenseTracker() {
     setDragActive(false)
   }
 
+  // Error Management
+  const handleFileError = (errorMessage) => {
+    setError(errorMessage)
+    setIsLoading(false)
+  }
+
+  const clearError = () => {
+    setError(null)
+  }
+
   return (
     <div className="expense-tracker">
       <header className="expense-tracker__header">
@@ -128,6 +96,27 @@ function ExpenseTracker() {
 
         {/* CSV Upload Section */}
         <section className="expense-tracker__file-upload-section">
+          {/* Error Message */}
+          {error && (
+            <div className="expense-tracker__error">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="15" y1="9" x2="9" y2="15"></line>
+                <line x1="9" y1="9" x2="15" y2="15"></line>
+              </svg>
+              <span>{error}</span>
+              <button onClick={clearError} className="expense-tracker__error-close">&times;</button>
+            </div>
+          )}
+          
+          {/* Loading Indicator */}
+          {isLoading && (
+            <div className="expense-tracker__loading">
+              <div className="expense-tracker__spinner"></div>
+              <span>Processing CSV file...</span>
+            </div>
+          )}
+          
           <div
             className={`expense-tracker__upload-area${
               dragActive ? ' expense-tracker__upload-area--active' : ''
@@ -180,16 +169,18 @@ function ExpenseTracker() {
             </div>
           )}
           
-          {/* CSV Format Instructions */}
-          <div className="expense-tracker__format-instructions">
-            <h4>CSV Format Requirements</h4>
-            <p>Your CSV file should contain columns for:</p>
-            <ul>
-              <li><strong>Date</strong> - in any standard date format (MM/DD/YYYY, YYYY-MM-DD, etc.)</li>
-              <li><strong>Amount</strong> - numerical value (with or without $ symbol)</li>
-              <li><strong>Description</strong> - optional description of the expense</li>
-            </ul>
-          </div>
+          {/* CSV Format Instructions - only show when no data loaded */}
+          {monthlyData.length === 0 && (
+            <div className="expense-tracker__format-instructions">
+              <h4>CSV Format Requirements</h4>
+              <p>Your CSV file should contain columns for:</p>
+              <ul>
+                <li><strong>Date</strong> - in any standard date format (MM/DD/YYYY, YYYY-MM-DD, etc.)</li>
+                <li><strong>Amount</strong> - numerical value (with or without $ symbol)</li>
+                <li><strong>Description</strong> - optional description of the expense</li>
+              </ul>
+            </div>
+          )}
         </section>
 
         {/* Monthly Spending Table */}

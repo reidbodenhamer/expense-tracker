@@ -1,89 +1,92 @@
-import { useState } from 'react'
-import { processCSV, generateMonthlyData, validateCSVFile } from '../utils/csvProcessor'
-import '../ExpenseTracker.css'
+import React, { useState, ChangeEvent, DragEvent } from 'react';
+import { processCSV, generateMonthlyData, validateCSVFile } from '../utils/csvProcessor';
+import { Expense, MonthlyData } from '../types';
+import '../ExpenseTracker.css';
 
-function ExpenseTracker() {
-  const [expenses, setExpenses] = useState([])
-  const [monthlyData, setMonthlyData] = useState([])
-  const [dragActive, setDragActive] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState(null)
+function ExpenseTracker(): React.JSX.Element {
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([]);
+  const [dragActive, setDragActive] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
   // CSV Processing
-  const handleCSVProcessing = (csvText) => {
+  const handleCSVProcessing = (csvText: string): void => {
     try {
-      setIsLoading(true)
-      setError(null)
+      setIsLoading(true);
+      setError(null);
 
-      const expenseData = processCSV(csvText)
-      setExpenses(expenseData)
-      setMonthlyData(generateMonthlyData(expenseData))
+      const expenseData = processCSV(csvText);
+      setExpenses(expenseData);
+      setMonthlyData(generateMonthlyData(expenseData));
     } catch (error) {
-      setError(error.message)
+      setError(error instanceof Error ? error.message : 'Unknown error occurred');
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
-  const processFile = (file) => {
-    clearError()
-    const { isValid, error } = validateCSVFile(file)
+  const processFile = (file: File): void => {
+    clearError();
+    const { isValid, error } = validateCSVFile(file);
     if (!isValid) {
-      handleFileError(error)
-      return
+      handleFileError(error || 'Unknown validation error');
+      return;
     }
 
-    setIsLoading(true)
-    const reader = new FileReader()
-    reader.onload = (loadEvent) => {
-      handleCSVProcessing(loadEvent.target.result)
-    }
-    reader.onerror = () => {
-      handleFileError('Error reading file. Please try again.')
-    }
-    reader.readAsText(file)
-  }
+    setIsLoading(true);
+    const reader = new FileReader();
+    reader.onload = (loadEvent: ProgressEvent<FileReader>): void => {
+      if (loadEvent.target?.result && typeof loadEvent.target.result === 'string') {
+        handleCSVProcessing(loadEvent.target.result);
+      }
+    };
+    reader.onerror = (): void => {
+      handleFileError('Error reading file. Please try again.');
+    };
+    reader.readAsText(file);
+  };
 
   // Event Handlers
-  const handleFileUpload = (fileUploadEvent) => {
-    const file = fileUploadEvent.target.files[0]
+  const handleFileUpload = (fileUploadEvent: ChangeEvent<HTMLInputElement>): void => {
+    const file = fileUploadEvent.target.files?.[0];
     if (file) {
-      processFile(file)
+      processFile(file);
     }
-  }
+  };
 
-  const handleDrop = (dropEvent) => {
-    dropEvent.preventDefault() // default browser behavior opens file in new tab
-    dropEvent.stopPropagation()
-    setDragActive(false)
+  const handleDrop = (dropEvent: DragEvent<HTMLDivElement>): void => {
+    dropEvent.preventDefault(); // default browser behavior opens file in new tab
+    dropEvent.stopPropagation();
+    setDragActive(false);
     
-    const file = dropEvent.dataTransfer.files?.[0]
+    const file = dropEvent.dataTransfer.files?.[0];
     if (file) {
-      processFile(file)
+      processFile(file);
     }
-  }
+  };
 
-  const handleDragOver = (dragOverEvent) => {
-    dragOverEvent.preventDefault()
-    dragOverEvent.stopPropagation()
-    setDragActive(true)
-  }
+  const handleDragOver = (dragOverEvent: DragEvent<HTMLDivElement>): void => {
+    dragOverEvent.preventDefault();
+    dragOverEvent.stopPropagation();
+    setDragActive(true);
+  };
 
-  const handleDragLeave = (dragLeaveEvent) => {
-    dragLeaveEvent.preventDefault()
-    dragLeaveEvent.stopPropagation()
-    setDragActive(false)
-  }
+  const handleDragLeave = (dragLeaveEvent: DragEvent<HTMLDivElement>): void => {
+    dragLeaveEvent.preventDefault();
+    dragLeaveEvent.stopPropagation();
+    setDragActive(false);
+  };
 
   // Error Management
-  const handleFileError = (errorMessage) => {
-    setError(errorMessage)
-    setIsLoading(false)
-  }
+  const handleFileError = (errorMessage: string): void => {
+    setError(errorMessage);
+    setIsLoading(false);
+  };
 
-  const clearError = () => {
-    setError(null)
-  }
+  const clearError = (): void => {
+    setError(null);
+  };
 
   return (
     <div className="expense-tracker">
@@ -198,7 +201,7 @@ function ExpenseTracker() {
                   </tr>
                 </thead>
                 <tbody>
-                  {monthlyData.map((month, index) => (
+                  {monthlyData.map((month: MonthlyData, index: number) => (
                     <tr key={index}>
                       <td className="month-cell">{month.month}</td>
                       <td className="amount-cell">${month.total.toFixed(2)}</td>
@@ -212,13 +215,13 @@ function ExpenseTracker() {
                 <div className="expense-tracker__stat">
                   <span className="expense-tracker__stat-label">Total Expenses:</span>
                   <span className="expense-tracker__stat-value">
-                    ${monthlyData.reduce((sum, month) => sum + month.total, 0).toFixed(2)}
+                    ${monthlyData.reduce((sum: number, month: MonthlyData) => sum + month.total, 0).toFixed(2)}
                   </span>
                 </div>
                 <div className="expense-tracker__stat">
                   <span className="expense-tracker__stat-label">Average Monthly:</span>
                   <span className="expense-tracker__stat-value">
-                    ${(monthlyData.reduce((sum, month) => sum + month.total, 0) / monthlyData.length).toFixed(2)}
+                    ${(monthlyData.reduce((sum: number, month: MonthlyData) => sum + month.total, 0) / monthlyData.length).toFixed(2)}
                   </span>
                 </div>
               </div>
@@ -227,7 +230,7 @@ function ExpenseTracker() {
         )}
       </main>
     </div>
-  )
+  );
 }
 
-export default ExpenseTracker
+export default ExpenseTracker;

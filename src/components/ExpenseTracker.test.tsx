@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import ExpenseTracker from './ExpenseTracker';
-import { describe, expect, it, test } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 describe('ExpenseTracker Component', () => {
   it('renders without crashing', () => {
@@ -25,5 +25,5 @@ describe('ExpenseTracker Component', () => {
   it('does not render the results section before data is uploaded', () => {
     render(<ExpenseTracker />);
     expect(screen.queryByText(/Monthly Spending Summary/i)).not.toBeInTheDocument();
-  })
+  });
 });

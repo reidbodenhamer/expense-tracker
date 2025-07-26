@@ -29,18 +29,99 @@ export interface CSVValidationResult {
   error: string | null;
 }
 
+interface ColumnMapping {
+  dateIndex: number;
+  amountIndex: number;
+  descriptionIndex: number;
+  transactionTypeIndex: number;
+}
+
 /**
- * Processes CSV text and converts it to expense data
+ * Finds column indices based on header patterns
+ * 
+ * @param headers - Array of header strings from the CSV
+ * @returns Object mapping column names to their indices
+ * @throws Error if required columns are not found
+ */
+const findColumnIndices = (headers: string[]): ColumnMapping => {
+  const normalizedHeaders = headers.map(header => header.trim().toLowerCase());
+  
+  const findColumnIndex = (patterns: string[]) =>
+    normalizedHeaders.findIndex(header => 
+      patterns.some(pattern => header.includes(pattern))
+    );
+
+  return {
+    dateIndex: findColumnIndex(DATE_PATTERNS),
+    amountIndex: findColumnIndex(AMOUNT_PATTERNS),
+    descriptionIndex: findColumnIndex(DESCRIPTION_PATTERNS),
+    transactionTypeIndex: findColumnIndex(TRANSACTION_TYPE_PATTERNS)
+  };
+};
+
+/**
+ * Determines if a transaction should be treated as an expense by
+ * checking its type. If the type is empty, it defaults based on the flag
+ * 
+ * @param transactionType - Type of the transaction
+ * @returns True if the transaction is an expense, false otherwise
+ */
+const isExpenseTransaction = (transactionType: string): boolean => {
+  const normalizedType = transactionType.toLowerCase();
+  return normalizedType === TRANSACTION_TYPE_DEBIT || 
+         (normalizedType === '' && DEFAULT_EXPENSE_FLAG);
+};
+
+/**
+ * Parses and validates a single row of CSV data.
+ * 
+ * @param row - Array of strings representing a CSV row
+ * @param columnMapping - Object containing indices of relevant columns
+ * @returns Expense object or null if row is invalid
+ */
+const parseExpenseRow = (row: string[], columnMapping: ColumnMapping): Expense | null => {
+  const { dateIndex, amountIndex, descriptionIndex, transactionTypeIndex } = columnMapping;
+  
+  // date and amount are required fields
+  if (!row[dateIndex] || !row[amountIndex]) {
+    return null;
+  }
+
+  const transactionType = transactionTypeIndex !== -1 && row[transactionTypeIndex] ? 
+    row[transactionTypeIndex] : '';
+  if (!isExpenseTransaction(transactionType)) {
+    return null;
+  }
+
+  const date = new Date(row[dateIndex]);
+  if (isNaN(date.getTime())) {
+    return null;
+  }
+
+  const amount = parseFloat(row[amountIndex].replace(/[$,]/g, ''));
+  if (isNaN(amount)) {
+    return null;
+  }
+
+  const description = descriptionIndex !== -1 && row[descriptionIndex] ? 
+    row[descriptionIndex] : DEFAULT_DESCRIPTION;
+
+  return {
+    date: date.toISOString().split('T')[0], // 'YYYY-MM-DD' format
+    amount: amount,
+    description: description
+  };
+};
+
+/**
+ * Processes CSV text with Papa Parse and converts it to expense data
  * 
  * @param csvText - Raw CSV file content
  * @returns Array of expense objects with date, amount, and description
  * @throws Error if CSV doesn't contain required 'date' and 'amount' columns
  */
 export const processCSV = (csvText: string): Expense[] => {
-  const HEADER_ROW_INDEX = 0;
-  const DATA_START_INDEX = 1;
-
-  // use PapaParse library to get 2D array of csv data
+  // Papa Parse library puts CSV data into a 2D array
   const parseResult = Papa.parse<string[]>(csvText, {
     header: false,
     skipEmptyLines: true,
@@ -51,43 +132,23 @@ export const processCSV = (csvText: string): Expense[] => {
     throw new Error(`CSV parsing error: ${parseResult.errors[0].message}`);
   }
 
-  const rows = parseResult.data; // rows is a 2D array of strings
-  const columns = rows[HEADER_ROW_INDEX].map(
-    (headerField: string) => headerField.trim().toLowerCase());
+  const rows = parseResult.data;
+  if (rows.length < 2) {
+    throw new Error('CSV must contain at least a header row and one data row');
+  }
 
-  const dateIndex = columns.findIndex((columnName: string) => 
-    DATE_PATTERNS.some((pattern: string) => columnName.includes(pattern)));
-  const amountIndex = columns.findIndex((columnName: string) => 
-    AMOUNT_PATTERNS.some((pattern: string) => columnName.includes(pattern)));
-  const descriptionIndex = columns.findIndex((columnName: string) => 
-    DESCRIPTION_PATTERNS.some((pattern: string) => columnName.includes(pattern)));
-  const transactionTypeIndex = columns.findIndex((columnName: string) => 
-    TRANSACTION_TYPE_PATTERNS.some((pattern: string) => columnName.includes(pattern)));
-
-  if (dateIndex === -1 || amountIndex === -1) {
+  const columnMapping = findColumnIndices(rows[0]);  
+  if (columnMapping.dateIndex === -1 || columnMapping.amountIndex === -1) {
     throw new Error('CSV must contain date and amount columns');
   }
 
   const expenseData: Expense[] = [];
-  rows.slice(DATA_START_INDEX).forEach((row: string[]) => { 
-    const transactionType = transactionTypeIndex !== -1 ? 
-        row[transactionTypeIndex].toLowerCase() : '';
-
-    const isExpense = transactionType === TRANSACTION_TYPE_DEBIT || 
-        (transactionType === '' && DEFAULT_EXPENSE_FLAG);
-    if (!isExpense) return; // skip non-expense transactions
-
-    const date = new Date(row[dateIndex]);
-    const amount = parseFloat(row[amountIndex].replace(/[$,]/g, '')); // remove '$' and ','
-    if (isNaN(date.getTime()) || isNaN(amount)) return;
-
-    const description = descriptionIndex !== -1 ? row[descriptionIndex] : DEFAULT_DESCRIPTION;
-    expenseData.push({
-      date: date.toISOString().split('T')[0], // 'YYYY-MM-DD' format
-      amount: amount,
-      description: description
-    });
-  });
+  for (let i = 1; i < rows.length; i++) {
+    const expense = parseExpenseRow(rows[i], columnMapping);
+    if (expense) {
+      expenseData.push(expense);
+    }
+  }
 
   return expenseData;
 };

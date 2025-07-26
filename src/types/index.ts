@@ -7,13 +7,14 @@ export interface Expense {
   category?: string;
 }
 
-export interface MonthlyData {
-  month: string;
-  total: number;
-  count: number;
+export interface ProcessedData {
+  transactions: Expense[];
+  totalExpenses: number;
+  totalTransactions: number;
 }
 
-export interface CSVValidationResult {
-  isValid: boolean;
-  error: string | null;
+export interface CSVProcessingResult {
+  success: boolean;
+  data?: ProcessedData;
+  error?: string;
 }

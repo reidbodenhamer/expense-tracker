@@ -3,7 +3,7 @@
  */
 
 import Papa from 'papaparse';
-import { Expense, MonthlyData, CSVValidationResult } from '../types';
+import { Expense } from '../types';
 
 const CSV_DELIMITER = ',';
 const MAX_CSV_SIZE_MB = 10;
@@ -17,6 +17,17 @@ const DESCRIPTION_PATTERNS = ['description', 'item', 'category'];
 const TRANSACTION_TYPE_PATTERNS = ['credit', 'debit', 'type'];
 
 const DEFAULT_DESCRIPTION = 'No description';
+
+export interface MonthlyData {
+  month: string;
+  total: number;
+  count: number;
+}
+
+export interface CSVValidationResult {
+  isValid: boolean;
+  error: string | null;
+}
 
 /**
  * Processes CSV text and converts it to expense data

@@ -1,7 +1,15 @@
 import React, { useState, ChangeEvent, DragEvent } from 'react';
-import { processCSV, generateMonthlyData, validateCSVFile } from '../utils/csvProcessor';
-import { Expense, MonthlyData } from '../types';
+import { processCSV, generateMonthlyData, validateCSVFile, MonthlyData } from '../utils/csvProcessor';
+import { Expense } from '../types';
 import '../ExpenseTracker.css';
+
+interface ExpenseTrackerState {
+  expenses: Expense[];
+  monthlyData: MonthlyData[];
+  dragActive: boolean;
+  isLoading: boolean;
+  error: string | null;
+}
 
 function ExpenseTracker(): React.JSX.Element {
   const [expenses, setExpenses] = useState<Expense[]>([]);

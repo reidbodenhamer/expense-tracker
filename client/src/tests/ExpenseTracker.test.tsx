@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import ExpenseTracker from './ExpenseTracker';
+import ExpenseTracker from '../components/ExpenseTracker';
 import { describe, expect, it } from 'vitest';
 
 describe('ExpenseTracker Component', () => {

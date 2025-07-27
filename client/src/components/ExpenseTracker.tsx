@@ -3,14 +3,6 @@ import { processCSV, generateMonthlyData, validateCSVFile, MonthlyData } from '.
 import { Expense } from '../types';
 import '../ExpenseTracker.css';
 
-interface ExpenseTrackerState {
-  expenses: Expense[];
-  monthlyData: MonthlyData[];
-  dragActive: boolean;
-  isLoading: boolean;
-  error: string | null;
-}
-
 function ExpenseTracker(): React.JSX.Element {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([]);
@@ -18,7 +10,6 @@ function ExpenseTracker(): React.JSX.Element {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  // CSV Processing
   const handleCSVProcessing = (csvText: string): void => {
     try {
       setIsLoading(true);

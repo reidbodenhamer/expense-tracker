@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import ExpenseTracker from './components/ExpenseTracker';
+import './index.css';
+import App from './App';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -9,6 +10,6 @@ if (!rootElement) {
 
 createRoot(rootElement).render(
   <StrictMode>
-    <ExpenseTracker />
+    <App />
   </StrictMode>,
 );

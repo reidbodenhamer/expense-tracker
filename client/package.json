@@ -17,6 +17,7 @@
     "@tailwindcss/vite": "^4.1.11",
     "axios": "^1.11.0",
     "emoji-picker-react": "^4.13.2",
+    "heic2any": "^0.0.4",
     "moment": "^2.30.1",
     "papaparse": "^5.5.3",
     "react": "^19.1.0",

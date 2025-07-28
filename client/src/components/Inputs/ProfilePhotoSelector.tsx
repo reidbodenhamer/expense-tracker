@@ -25,8 +25,12 @@ const ProfilePhotoSelector: React.FC<{
         const converted = await heic2any({ blob: file, toType: "image/jpeg" });
         const blob = Array.isArray(converted) ? converted[0] : converted;
         preview = URL.createObjectURL(blob as Blob);
-      } catch (error) {
-        console.error("Failed to convert HEIC image:", error);
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          console.error("Failed to convert HEIC image:", error.message);
+        } else {
+          console.error("Failed to convert HEIC image: An unknown error occurred", error);
+        }
         preview = null;
       }
     } else {

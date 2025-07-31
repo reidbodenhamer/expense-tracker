@@ -1,5 +1,4 @@
-import express, { Request, Response } from "express";
-import User from "../models/User";
+import { Request, Response } from "express";
 import Expense, { ExpenseDocument } from "../models/Expense";
 import xlsx from "xlsx";
 
@@ -59,9 +58,16 @@ export const getAllExpenses = async (req: Request, res: Response) => {
 };
 
 export const deleteExpense = async (req: Request, res: Response) => {
+  const userId = req.user?._id;
+  
   try {
-    await Expense.findByIdAndDelete(req.params.id);
-    res.status(200).json({ message: "Expense deleted successfully" });
+    const expense = await Expense.findOne({ _id: req.params.id, userId });
+    if (!expense) {
+      return res.status(404).json({ message: "Expense record not found" });
+    }
+
+    await expense.deleteOne();
+    res.json({ message: "Expense deleted successfully" });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     res
@@ -84,6 +90,10 @@ export const downloadExpenseExcel = async (req: Request, res: Response) => {
       date: -1,
     });
 
+    if (expenses.length === 0) {
+      return res.status(404).json({ message: "No expenses found to export" });
+    }
+
     const data: ExpenseExcelRow[] = expenses.map((item) => ({
       category: item.category,
       amount: item.amount,
@@ -93,8 +103,21 @@ export const downloadExpenseExcel = async (req: Request, res: Response) => {
     const workbook = xlsx.utils.book_new();
     const worksheet = xlsx.utils.json_to_sheet(data);
     xlsx.utils.book_append_sheet(workbook, worksheet, "Expenses");
-    xlsx.writeFile(workbook, "expense_details.xlsx");
-    res.download("expense_details.xlsx");
+
+    const excelBuffer = xlsx.write(workbook, {
+      type: "buffer",
+      bookType: "xlsx",
+    });
+
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=expense_details.xlsx"
+    );
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.send(excelBuffer);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     res.status(500).json({

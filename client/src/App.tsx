@@ -1,15 +1,10 @@
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import React from "react";
 import Login from "./pages/Auth/Login";
 import SignUp from "./pages/Auth/SignUp";
 import Home from "./pages/Dashboard/Home";
+import UserProvider from "./context/userContext";
 
-// replace with JWT validation later
 const isTokenValid = () => !!localStorage.getItem("token");
 
 const ProtectedRoute = ({ children }: { children: React.ReactElement }) => {
@@ -29,8 +24,8 @@ const PublicRoute = ({ children }: { children: React.ReactElement }) => {
 function App() {
   const isAuthenticated = !!localStorage.getItem("token");
   return (
-    <div>
-      <Router basename="/expense-tracker">
+    <UserProvider>
+      <div>
         <Routes>
           <Route
             path="/"
@@ -66,8 +61,8 @@ function App() {
             }
           />
         </Routes>
-      </Router>
-    </div>
+      </div>
+    </UserProvider>
   );
 }
 

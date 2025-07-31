@@ -2,7 +2,7 @@ import mongoose, { Document, Schema } from "mongoose";
 
 export interface ExpenseDocument extends Document {
   userId: mongoose.Types.ObjectId;
-  icon: string;
+  icon?: string | null;
   category: string;
   amount: number;
   date: Date;

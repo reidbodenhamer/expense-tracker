@@ -1,5 +1,4 @@
-import express, { Request, Response } from "express";
-import User from "../models/User";
+import { Request, Response } from "express";
 import Income, { IncomeDocument } from "../models/Income";
 import xlsx from "xlsx";
 
@@ -59,8 +58,15 @@ export const getAllIncomes = async (req: Request, res: Response) => {
 };
 
 export const deleteIncome = async (req: Request, res: Response) => {
+  const userId = req.user?._id;
+
   try {
-    await Income.findByIdAndDelete(req.params.id);
+    const income = await Income.findOne({ _id: req.params.id, userId });
+    if (!income) {
+      return res.status(404).json({ message: "Income record not found" });
+    }
+
+    await income.deleteOne();
     res.json({ message: "Income deleted successfully" });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
@@ -84,6 +90,10 @@ export const downloadIncomeExcel = async (req: Request, res: Response) => {
       date: -1,
     });
 
+    if (incomes.length === 0) {
+      return res.status(404).json({ message: "No incomes found to export" });
+    }
+
     const data: IncomeExcelRow[] = incomes.map((item) => ({
       source: item.source,
       amount: item.amount,
@@ -93,8 +103,21 @@ export const downloadIncomeExcel = async (req: Request, res: Response) => {
     const workbook = xlsx.utils.book_new();
     const worksheet = xlsx.utils.json_to_sheet(data);
     xlsx.utils.book_append_sheet(workbook, worksheet, "Income");
-    xlsx.writeFile(workbook, "income_details.xlsx");
-    res.download("income_details.xlsx");
+
+    const excelBuffer = xlsx.write(workbook, {
+      type: "buffer",
+      bookType: "xlsx",
+    });
+
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=income_details.xlsx"
+    );
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.send(excelBuffer);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     res.status(500).json({

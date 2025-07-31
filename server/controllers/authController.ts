@@ -6,7 +6,7 @@ const generateToken = (id: string): string => {
   if (!jwtSecret) {
     throw new Error("JWT_SECRET environment variable is not defined");
   }
-  return jwt.sign({ id }, jwtSecret, { expiresIn: "1h" });
+  return jwt.sign({ id }, jwtSecret, { expiresIn: "1w" });
 };
 
 import { Request, Response } from "express";
@@ -119,5 +119,3 @@ export const getUserInfo = async (req: Request, res: Response) => {
       .json({ message: "Error getting user info", error: errorMessage });
   }
 };
-
-export const protect = (req: Request, res: Response, next: Function) => {};

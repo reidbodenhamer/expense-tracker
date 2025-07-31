@@ -1,4 +1,4 @@
-import mongoose, { Document } from "mongoose";
+import mongoose, { Document, Schema } from "mongoose";
 
 export interface IncomeDocument extends Document {
   userId: mongoose.Types.ObjectId;
@@ -8,7 +8,7 @@ export interface IncomeDocument extends Document {
   date: Date;
 }
 
-const IncomeSchema = new mongoose.Schema<IncomeDocument>(
+const IncomeSchema = new Schema<IncomeDocument>(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,

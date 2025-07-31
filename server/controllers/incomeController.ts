@@ -41,7 +41,7 @@ export const addIncome = async (
   }
 };
 
-export const getAllIncome = async (req: Request, res: Response) => {
+export const getAllIncomes = async (req: Request, res: Response) => {
   const userId = req.user?._id;
 
   try {
@@ -71,32 +71,35 @@ export const deleteIncome = async (req: Request, res: Response) => {
 };
 
 interface IncomeExcelRow {
-  Source: string;
-  Amount: number;
-  Date: Date;
+  source: string;
+  amount: number;
+  date: Date;
 }
 
 export const downloadIncomeExcel = async (req: Request, res: Response) => {
-    const userId = req.user?._id;
+  const userId = req.user?._id;
 
-    try {
-        const income: IncomeDocument[] = await Income.find({ userId }).sort({ date: -1 });
+  try {
+    const incomes: IncomeDocument[] = await Income.find({ userId }).sort({
+      date: -1,
+    });
 
-        const data: IncomeExcelRow[] = income.map((item) => ({
-            Source: item.source,
-            Amount: item.amount,
-            Date: item.date,
-        }));
+    const data: IncomeExcelRow[] = incomes.map((item) => ({
+      source: item.source,
+      amount: item.amount,
+      date: item.date,
+    }));
 
-        const workbook = xlsx.utils.book_new();
-        const worksheet = xlsx.utils.json_to_sheet(data);
-        xlsx.utils.book_append_sheet(workbook, worksheet, "Income");
-        xlsx.writeFile(workbook, "income_details.xlsx");
-        res.download("income_details.xlsx");
-    } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        res
-            .status(500)
-            .json({ message: "Error downloading income report", error: errorMessage });
-    }
+    const workbook = xlsx.utils.book_new();
+    const worksheet = xlsx.utils.json_to_sheet(data);
+    xlsx.utils.book_append_sheet(workbook, worksheet, "Income");
+    xlsx.writeFile(workbook, "income_details.xlsx");
+    res.download("income_details.xlsx");
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    res.status(500).json({
+      message: "Error downloading income report",
+      error: errorMessage,
+    });
+  }
 };

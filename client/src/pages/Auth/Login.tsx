@@ -2,13 +2,17 @@ import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import AuthLayout from "../../components/layouts/AuthLayout";
 import Input from "../../components/Inputs/Input";
+import axios from "axios";
+import axiosInstance from "../../utils/axiosInstance";
 import { validateEmail } from "../../utils/helper";
+import { API_PATHS } from "../../utils/apiPaths";
+import { UserContext } from "../../context/userContext";
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
-
+  const { updateUser } = React.useContext(UserContext);
   const navigate = useNavigate();
 
   // handle login form submit
@@ -19,7 +23,6 @@ const Login: React.FC = () => {
       setError("Please enter a valid email address.");
       return;
     }
-
     if (!password) {
       setError("Please enter your password.");
       return;
@@ -27,7 +30,28 @@ const Login: React.FC = () => {
 
     setError(null);
 
-    // Login api call
+    try {
+      const response = await axiosInstance.post<{ token: string; user: any }>(
+        API_PATHS.AUTH.LOGIN,
+        {
+          email,
+          password,
+        }
+      );
+      const { token, user } = response.data;
+
+      if (token) {
+        localStorage.setItem("token", token);
+        updateUser(user);
+        navigate("/dashboard");
+      }
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        setError(error.response?.data?.message || "An error occurred");
+      } else {
+        setError("An unexpected error occurred");
+      }
+    }
   };
 
   return (
@@ -41,14 +65,18 @@ const Login: React.FC = () => {
         <form onSubmit={handleLogin}>
           <Input
             value={email}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setEmail(e.target.value)
+            }
             label="Email Address"
             placeholder="youremail@example.com"
             type="text"
           />
           <Input
             value={password}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setPassword(e.target.value)
+            }
             label="Password"
             placeholder="Enter your password"
             type="password"

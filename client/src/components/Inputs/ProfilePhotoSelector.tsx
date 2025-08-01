@@ -2,48 +2,54 @@ import React, { useRef } from "react";
 import { LuUser, LuUpload, LuTrash } from "react-icons/lu";
 import heic2any from "heic2any";
 
+async function convertHeicToUrl(file: File): Promise<string | null> {
+  try {
+    const converted = await heic2any({ blob: file, toType: "image/jpeg" });
+    const blob = Array.isArray(converted) ? converted[0] : converted;
+    return URL.createObjectURL(blob as Blob);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error("Failed to convert HEIC image:", error.message);
+    } else {
+      console.error("Failed to convert HEIC image: An unknown error occurred", error);
+    }
+    return null;
+  }
+}
+
 const ProfilePhotoSelector: React.FC<{
-  image: string | null;
-  setImage: (image: string | null) => void;
+  image: File | null;
+  setImage: (image: File | null) => void;
 }> = ({ image, setImage }) => {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [previewUrl, setPreviewUrl] = React.useState<string | null>(image);
+  const [selectedImageUrl, setSelectedImageUrl] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (!image) {
+      setSelectedImageUrl(null);
+      return;
+    }
+    if (image.type === "image/heic" || image.name.toLowerCase().endsWith(".heic")) {
+      convertHeicToUrl(image).then(setSelectedImageUrl);
+    } else {
+      setSelectedImageUrl(URL.createObjectURL(image));
+    }
+    return () => {
+      if (selectedImageUrl) URL.revokeObjectURL(selectedImageUrl);
+    };
+  }, [image]);
 
   const handleImageChange = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const file = event.target.files?.[0];
     if (!file) return;
-
-    let preview: string | null = null;
-
-    if (
-      file.type === "image/heic" ||
-      file.name.toLowerCase().endsWith(".heic")
-    ) {
-      try {
-        const converted = await heic2any({ blob: file, toType: "image/jpeg" });
-        const blob = Array.isArray(converted) ? converted[0] : converted;
-        preview = URL.createObjectURL(blob as Blob);
-      } catch (error: unknown) {
-        if (error instanceof Error) {
-          console.error("Failed to convert HEIC image:", error.message);
-        } else {
-          console.error("Failed to convert HEIC image: An unknown error occurred", error);
-        }
-        preview = null;
-      }
-    } else {
-      preview = URL.createObjectURL(file);
-    }
-
-    setImage(preview);
-    setPreviewUrl(preview);
+    setImage(file);
   };
 
   const handleRemoveImage = () => {
     setImage(null);
-    setPreviewUrl(null);
+    setSelectedImageUrl(null);
   };
 
   const onChooseFile = () => {
@@ -75,7 +81,7 @@ const ProfilePhotoSelector: React.FC<{
       ) : (
         <div className="relative">
           <img
-            src={previewUrl || image}
+            src={selectedImageUrl || ""}
             alt="Photo"
             className="w-20 h-20 rounded-full object-cover"
           />

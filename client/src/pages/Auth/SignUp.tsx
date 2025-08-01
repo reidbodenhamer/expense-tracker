@@ -2,21 +2,27 @@ import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import AuthLayout from "../../components/layouts/AuthLayout";
 import Input from "../../components/Inputs/Input";
-import { validateEmail } from "../../utils/helper";
 import ProfilePhotoSelector from "../../components/Inputs/ProfilePhotoSelector";
+import axios from "axios";
+import axiosInstance from "../../utils/axiosInstance";
+import { validateEmail } from "../../utils/helper";
+import { API_PATHS } from "../../utils/apiPaths";
+import { UserContext } from "../../context/userContext";
+import uploadImage from "../../utils/uploadImage";
 
 const SignUp: React.FC = () => {
-  const [profilePic, setProfilePic] = useState<string | null>(null);
+  const [profilePic, setProfilePic] = useState<File | null>(null);
   const [fullName, setFullName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
-
   const [error, setError] = useState<string | null>(null);
+  const { updateUser } = React.useContext(UserContext);
+  const navigate = useNavigate();
 
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSignUp = async (event: React.FormEvent) => {
+    event.preventDefault();
 
-    let profileImageUrl: string | null = null;
+    let profileImageUrl: string = "";
 
     if (!fullName) {
         setError("Please enter your name.");
@@ -35,7 +41,35 @@ const SignUp: React.FC = () => {
 
     setError(null);
 
-    // SignUp API call
+    try {
+      if (profilePic) {
+        const imageUploadResponse = await uploadImage(profilePic);
+        profileImageUrl = imageUploadResponse.imageUrl || "";
+      }
+
+      const response = await axiosInstance.post<{ token: string, user: any }>(
+        API_PATHS.AUTH.REGISTER, 
+      { 
+        fullName, 
+        email, 
+        password,
+        profileImageUrl
+      });
+
+      const { token, user } = response.data;
+
+      if (token) {
+        localStorage.setItem("token", token);
+        updateUser(user);
+        navigate("/dashboard");
+      }
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        setError(error.response?.data?.message || "An error occurred");
+      } else {
+        setError("An unexpected error occurred");
+      }
+    }
   };
 
   return (

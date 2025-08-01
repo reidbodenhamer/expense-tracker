@@ -1,5 +1,9 @@
 // TypeScript type definitions for the expense tracker
-
+export interface User {
+  _id: string;
+  email: string;
+  name: string;
+}
 export interface Expense {
   date: string;
   description: string;

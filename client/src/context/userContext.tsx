@@ -1,4 +1,4 @@
-import React, { createContext, useState } from "react";
+import React, { createContext, useCallback, useState } from "react";
 import { User } from "../types";
 
 export const UserContext = createContext<{
@@ -16,11 +16,11 @@ const UserProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [user, setUser] = useState<User | null>(null);
 
-  const updateUser = (userData: User | null) => {
+  const updateUser = useCallback((userData: User | null) => {
     setUser(userData);
-  };
+  }, []);
 
-  const clearUser = () => setUser(null);
+  const clearUser = useCallback(() => setUser(null), []);
 
   return (
     <UserContext.Provider

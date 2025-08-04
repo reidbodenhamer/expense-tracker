@@ -2,7 +2,8 @@
 export interface User {
   _id: string;
   email: string;
-  name: string;
+  fullName: string;
+  profileImageUrl?: string;
 }
 export interface Expense {
   date: string;

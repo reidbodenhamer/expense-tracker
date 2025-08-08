@@ -1,25 +1,6 @@
-// TypeScript type definitions for the expense tracker
-export interface User {
-  _id: string;
-  email: string;
-  fullName: string;
-  profileImageUrl?: string;
-}
-export interface Expense {
-  date: string;
-  description: string;
-  amount: number;
-  category?: string;
-}
-
-export interface ProcessedData {
-  transactions: Expense[];
-  totalExpenses: number;
-  totalTransactions: number;
-}
-
-export interface CSVProcessingResult {
-  success: boolean;
-  data?: ProcessedData;
-  error?: string;
-}
+// re-exports all types for easy importing
+export * from './user';
+export * from './transactions';
+export * from './dashboard';
+export * from './csv';
+export * from './charts';

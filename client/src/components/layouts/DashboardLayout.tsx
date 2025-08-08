@@ -3,23 +3,26 @@ import { UserContext } from "../../context/userContext";
 import Navbar from "./Navbar";
 import SideMenu from "./SideMenu";
 
-const DashboardLayout: React.FC<{ children: React.ReactNode, activeMenu: string }> = ({ activeMenu, children }) => {
-      const { user } = useContext(UserContext);
-    return (
-        <div className="">
-            <Navbar activeMenu={activeMenu} />
+const DashboardLayout: React.FC<{
+  children: React.ReactNode;
+  activeMenu: string;
+}> = ({ activeMenu, children }) => {
+  const { user } = useContext(UserContext);
+  return (
+    <div className="">
+      <Navbar activeMenu={activeMenu} />
 
-            {user && (
-                <div className="flex">
-                    <div className="hidden lg:block">
-                        <SideMenu activeMenu={activeMenu} />
-                    </div>
+      {user && (
+        <div className="flex">
+          <div className="hidden lg:block">
+            <SideMenu activeMenu={activeMenu} />
+          </div>
 
-                    <div className="grow mx-5">{children}</div>
-                </div>
-            )}
+          <div className="grow mx-5">{children}</div>
         </div>
-    )
-}
+      )}
+    </div>
+  );
+};
 
 export default DashboardLayout;

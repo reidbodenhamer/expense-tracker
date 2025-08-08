@@ -62,19 +62,14 @@ async function getExpenseTransactions(
   }).sort({ date: -1 });
 }
 
-async function getRecentTransactions(
-  userObjectId: Types.ObjectId,
-  days: number
-) {
-  const sinceDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-
+async function getRecentTransactions(userObjectId: Types.ObjectId) {
   const [recentIncomes, recentExpenses] = await Promise.all([
-    Income.find({ userId: userObjectId, date: { $gte: sinceDate } })
+    Income.find({ userId: userObjectId })
       .sort({ date: -1 })
-      .limit(5),
-    Expense.find({ userId: userObjectId, date: { $gte: sinceDate } })
+      .limit(10),
+    Expense.find({ userId: userObjectId })
       .sort({ date: -1 })
-      .limit(5),
+      .limit(10),
   ]);
 
   return [
@@ -115,7 +110,7 @@ export const getDashboardData = async (req: Request, res: Response) => {
     const incomeLast60Days = sumAmounts(last60DaysIncomeTransactions);
     const expensesLast30Days = sumAmounts(last30DaysExpenseTransactions);
 
-    const recentTransactions = await getRecentTransactions(userObjectId, 5);
+    const recentTransactions = await getRecentTransactions(userObjectId);
 
     const response: DashboardTotals = {
       totalBalance: totalIncome - totalExpenses,
